@@ -1,6 +1,12 @@
 package com.satya.network_anomaly_detection.service;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -10,10 +16,18 @@ import java.time.Instant;
 import java.util.Random;
 
 @Service
-@Slf4j
+@RequiredArgsConstructor
 public class TrafficGeneratorService {
 
     private final Random random = new Random();
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final String TOPIC = "raw-network-logs";
+
+    private static final Logger log = LoggerFactory.getLogger(TrafficGeneratorService.class);
 
     // Assuming normal request happens to Google, AWS, Azure, etc
     private final String[] NORMAL_DESTINATION_IPS = {
@@ -24,12 +38,24 @@ public class TrafficGeneratorService {
     @Scheduled(fixedRate = 500)
     public void generateAndLogTraffic() {
         NetworkLog logEntry = createTrafficLog();
-        log.info("Generated Log: {}", logEntry);
+
+        try {
+            // We convert the Java Object into a JSON String
+            String jsonLog = objectMapper.writeValueAsString(logEntry);
+
+            // WE SEND THE STRING, NOT THE OBJECT
+            kafkaTemplate.send(TOPIC, jsonLog);
+
+            log.info("Sent to Kafka: {}", jsonLog);
+
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize log entry", e);
+        }
     }
 
     private NetworkLog createTrafficLog() {
         int chance = random.nextInt(100);
-        Instant timestamp = Instant.now();
+        String timestamp = Instant.now().toString();
         String sourceIp = generateSourceIp();
         String destinationIp;
         String protocol = "TCP";
