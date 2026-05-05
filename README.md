@@ -47,6 +47,6 @@ uvicorn brain:app --reload
 Open the root directory in your IDE and run NetworkAnomalyDetectionApplication.java to begin pumping simulated logs into Kafka.
 
 4. Boot the Operations Dashboard (React)
-cd react-ui
+cd react_ui
 npm install
 npm run dev
