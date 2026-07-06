@@ -38,6 +38,7 @@ docker-compose up -d
 2. Start the AI Core (Python)
 cd anomaly-detection-brain
 python -m venv venv
+# in powershell disable ExecutionPolicy security (Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass)
 # Activate venv (Windows: .\venv\Scripts\activate | Mac/Linux: source venv/bin/activate)
 pip install -r requirements.txt
 uvicorn brain:app --reload
