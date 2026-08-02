@@ -7,8 +7,13 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import warnings
+import os
+import time
+from kafka.errors import NoBrokersAvailable
 
 warnings.filterwarnings("ignore")
+
+kafka_broker = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 
 app = FastAPI()
 
@@ -24,13 +29,21 @@ model = IsolationForest(n_estimators=100, contamination=0.06, random_state=42)
 training_data = []
 is_trained = False
 
-consumer = KafkaConsumer(
-    'raw-network-logs',
-    bootstrap_servers=['kafka:29092'],
-    auto_offset_reset='latest',
-    value_deserializer=lambda x: json.loads(x.decode('utf-8')),
-    consumer_timeout_ms=1000
-)
+consumer = None
+while not consumer:
+    try:
+        print("Attempting to connect to kafka...")
+        consumer = KafkaConsumer(
+            'raw-network-logs',
+            bootstrap_servers=['kafka:29092'],
+            auto_offset_reset='latest',
+            value_deserializer=lambda x: json.loads(x.decode('utf-8')),
+            consumer_timeout_ms=1000
+        )
+        print("Successfully connected to kafka!")
+    except NoBrokersAvailable:
+        print("Kafka is not ready yet. Retrying in 3s")
+        time.sleep(3)
 
 # SSE Generator
 async def event_stream():
