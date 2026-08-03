@@ -31,6 +31,8 @@ services:
         condition: service_started
     networks:
       - kafka-net
+    ports:
+      - "8080:8080"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
@@ -59,3 +61,12 @@ services:
       - "5173:80"
     networks:
       - kafka-net
+    
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    networks:
+      - kafka-net
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro

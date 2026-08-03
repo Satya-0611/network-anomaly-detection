@@ -10,12 +10,15 @@ import warnings
 import os
 import time
 from kafka.errors import NoBrokersAvailable
+from prometheus_fastapi_instrumentator import Instrumentator
 
 warnings.filterwarnings("ignore")
 
 kafka_broker = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 
 app = FastAPI()
+
+Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,

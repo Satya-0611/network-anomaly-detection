@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 5s # How often to scrape the server
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Scarpe the prometheus server itself
+  - 'job_name': 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    
+  # Scarpe python-brain server
+  - 'job_name': 'python-brain'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['python-brain:8000']
+  
+  # Scarpe java-producer
+  - 'job_name': 'java-producer'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['java-producer:8080']
